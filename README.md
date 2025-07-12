@@ -55,24 +55,32 @@ LLM BENCHMARK SUMMARY
 ================================================================================
                                     Avg Quality  Quality Std  Avg Latency  Med Latency  Avg Cost  Total Cost  Error Rate
 model_name                                                                                                              
-Anthropic-claude-sonnet-4-20250514       90.062       13.138       15.132       11.268     0.011       0.179        0.00
-DeepSeek-deepseek-chat                   93.812        8.085       29.205       24.411     0.001       0.013        0.00
-Google-gemini-2.5-pro                    69.622       28.552       21.624       21.594     0.001       0.021        6.25
-OpenAI-gpt-4.1                           89.688       12.175        6.379        6.355     0.005       0.083        0.00
-xAI-grok-4-0709                          89.518       11.205       24.384       22.662     0.012       0.194        0.00
+Anthropic-claude-sonnet-4-20250514       87.928       14.031       14.919       10.779     0.011       0.178         0.0
+DeepSeek-deepseek-chat                   89.875       10.455       34.939       28.055     0.001       0.014         0.0
+Google-gemini-2.5-pro                    78.654       20.606       22.060       22.571     0.002       0.025         0.0
+OpenAI-gpt-4.1                           89.375       14.818        7.834        7.589     0.005       0.079         0.0
+xAI-grok-4-0709                          92.926       13.368       21.227       20.889     0.013       0.202         0.0
 ================================================================================
 
-Best Overall Quality: DeepSeek-deepseek-chat
+Best Overall Quality: xAI-grok-4-0709
 Fastest Response: OpenAI-gpt-4.1
 Most Cost-Effective: DeepSeek-deepseek-chat
 
 📊 Results saved to benchmark_report.json
 📈 Visualisations saved to llm_benchmark_results.png and llm_benchmark_detailed.png
-🏆 Best Overall Model: DeepSeek-deepseek-chat
-📈 Overall Average Quality: 86.5%
-💰 Total Cost: $0.4894
-⚡ Average Latency: 19.34s
+🏆 Best Overall Model: xAI-grok-4-0709
+📈 Overall Average Quality: 87.8%
+💰 Total Cost: $0.4977
+⚡ Average Latency: 20.20s
 ```
+
+#### Results Inconsistencies
+
+The variability in model rankings during the benchmark tests for each run can be attributed to several factors:
+
++ Randomness in Model Responses: Many language models incorporate some level of randomness in their responses. It can lead to different outputs for the same input across multiple runs, affecting the quality scores.
++ Statistical Variability: The average quality and latency metrics are calculated from multiple runs. If the number of runs is small, the results can be influenced by outliers or variations in performance during those specific runs.
++ API Load and Latency: The performance of models accessed via API can be affected by server load, network latency, and other external factors. Variations in these conditions can lead to differences in response times and potentially in the quality of responses.
 
 ### License
 
