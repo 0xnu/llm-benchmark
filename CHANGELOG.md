@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.3 - 2025-07-12 - @0xnu
+* moonshot-v1-8k added
+* refinements
+
 ## v0.0.2 - 2025-07-12 - @0xnu
 * gemini-2.5-pro added
 

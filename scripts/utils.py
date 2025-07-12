@@ -6,19 +6,14 @@
 @author: Finbarrs Oketunji
 @contact: f@finbarrs.eu
 @time: Wednesday July 09 23:05:15 2025
-@updated: Saturday July 12 02:32:25 2025
-@desc: Test and compare different large language models on various tasks.
+@updated: Saturday July 12 13:02:25 2025
+@desc: Utilities for LLM benchmarking including evaluation and API key management
 """
 
-import time
-from typing import Dict, List, Optional, Tuple, Any
-from dataclasses import dataclass
-from abc import ABC, abstractmethod
-import openai
-import anthropic
-import google.generativeai as genai
-from datetime import datetime
 import os
+from typing import Dict, List, Optional
+from dataclasses import dataclass
+from datetime import datetime
 
 
 @dataclass
@@ -42,270 +37,6 @@ class BenchmarkTask:
     category: str
     expected_length: str  # short, medium, long
     evaluation_criteria: List[str]
-
-
-class LLMInterface(ABC):
-    """Abstract interface for LLM providers"""
-
-    @abstractmethod
-    async def generate(self, prompt: str) -> Tuple[str, Dict[str, Any]]:
-        """Generate response and return (response, metadata)"""
-        pass
-
-    @abstractmethod
-    def get_model_name(self) -> str:
-        pass
-
-    @abstractmethod
-    def estimate_cost(self, input_tokens: int, output_tokens: int) -> float:
-        pass
-
-
-class OpenAIInterface(LLMInterface):
-    def __init__(self, api_key: str, model: str = "gpt-4o"):
-        self.client = openai.AsyncOpenAI(api_key=api_key)
-        self.model = model
-
-    async def generate(self, prompt: str) -> Tuple[str, Dict[str, Any]]:
-        start_time = time.time()
-
-        try:
-            response = await self.client.chat.completions.create(
-                model=self.model,
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=2000,
-                temperature=0.7,
-            )
-
-            latency = time.time() - start_time
-
-            metadata = {
-                "latency": latency,
-                "input_tokens": response.usage.prompt_tokens,
-                "output_tokens": response.usage.completion_tokens,
-                "error": None,
-            }
-
-            return response.choices[0].message.content, metadata
-
-        except Exception as e:
-            return "", {
-                "latency": time.time() - start_time,
-                "input_tokens": 0,
-                "output_tokens": 0,
-                "error": str(e),
-            }
-
-    def get_model_name(self) -> str:
-        return f"OpenAI-{self.model}"
-
-    def estimate_cost(self, input_tokens: int, output_tokens: int) -> float:
-        # GPT-4 pricing (approximate)
-        input_cost = input_tokens * 0.0025 / 1000  # $2.50 per 1M tokens
-        output_cost = output_tokens * 0.01 / 1000  # $10.00 per 1M tokens
-        return input_cost + output_cost
-
-
-class AnthropicInterface(LLMInterface):
-    def __init__(self, api_key: str, model: str = "claude-3-5-sonnet-20241022"):
-        self.client = anthropic.AsyncAnthropic(api_key=api_key)
-        self.model = model
-
-    async def generate(self, prompt: str) -> Tuple[str, Dict[str, Any]]:
-        start_time = time.time()
-
-        try:
-            response = await self.client.messages.create(
-                model=self.model,
-                max_tokens=2000,
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.7,
-            )
-
-            latency = time.time() - start_time
-
-            metadata = {
-                "latency": latency,
-                "input_tokens": response.usage.input_tokens,
-                "output_tokens": response.usage.output_tokens,
-                "error": None,
-            }
-
-            return response.content[0].text, metadata
-
-        except Exception as e:
-            return "", {
-                "latency": time.time() - start_time,
-                "input_tokens": 0,
-                "output_tokens": 0,
-                "error": str(e),
-            }
-
-    def get_model_name(self) -> str:
-        return f"Anthropic-{self.model}"
-
-    def estimate_cost(self, input_tokens: int, output_tokens: int) -> float:
-        # Claude 4 Sonnet pricing (approximate)
-        input_cost = input_tokens * 0.003 / 1000  # $3.00 per 1M tokens
-        output_cost = output_tokens * 0.015 / 1000  # $15.00 per 1M tokens
-        return input_cost + output_cost
-
-
-class DeepSeekInterface(LLMInterface):
-    def __init__(
-        self,
-        api_key: str,
-        model: str = "deepseek-chat",
-        base_url: str = "https://api.deepseek.com",
-    ):
-        self.client = openai.AsyncOpenAI(api_key=api_key, base_url=base_url)
-        self.model = model
-
-    async def generate(self, prompt: str) -> Tuple[str, Dict[str, Any]]:
-        start_time = time.time()
-
-        try:
-            response = await self.client.chat.completions.create(
-                model=self.model,
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=2000,
-                temperature=0.7,
-            )
-
-            latency = time.time() - start_time
-
-            metadata = {
-                "latency": latency,
-                "input_tokens": response.usage.prompt_tokens,
-                "output_tokens": response.usage.completion_tokens,
-                "error": None,
-            }
-
-            return response.choices[0].message.content, metadata
-
-        except Exception as e:
-            return "", {
-                "latency": time.time() - start_time,
-                "input_tokens": 0,
-                "output_tokens": 0,
-                "error": str(e),
-            }
-
-    def get_model_name(self) -> str:
-        return f"DeepSeek-{self.model}"
-
-    def estimate_cost(self, input_tokens: int, output_tokens: int) -> float:
-        # DeepSeek V3 pricing (very competitive)
-        input_cost = input_tokens * 0.00027 / 1000  # $0.27 per 1M tokens
-        output_cost = output_tokens * 0.0011 / 1000  # $1.10 per 1M tokens
-        return input_cost + output_cost
-
-
-class XAIInterface(LLMInterface):
-    """Interface for Grok models via xAI API"""
-
-    def __init__(
-        self,
-        api_key: str,
-        model: str = "grok-beta",
-        base_url: str = "https://api.x.ai/v1",
-    ):
-        self.client = openai.AsyncOpenAI(api_key=api_key, base_url=base_url)
-        self.model = model
-
-    async def generate(self, prompt: str) -> Tuple[str, Dict[str, Any]]:
-        start_time = time.time()
-
-        try:
-            response = await self.client.chat.completions.create(
-                model=self.model,
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=2000,
-                temperature=0.7,
-            )
-
-            latency = time.time() - start_time
-
-            metadata = {
-                "latency": latency,
-                "input_tokens": response.usage.prompt_tokens,
-                "output_tokens": response.usage.completion_tokens,
-                "error": None,
-            }
-
-            return response.choices[0].message.content, metadata
-
-        except Exception as e:
-            return "", {
-                "latency": time.time() - start_time,
-                "input_tokens": 0,
-                "output_tokens": 0,
-                "error": str(e),
-            }
-
-    def get_model_name(self) -> str:
-        return f"xAI-{self.model}"
-
-    def estimate_cost(self, input_tokens: int, output_tokens: int) -> float:
-        # Grok pricing
-        input_cost = input_tokens * 0.005 / 1000  # $5.00 per 1M tokens
-        output_cost = output_tokens * 0.015 / 1000  # $15.00 per 1M tokens
-        return input_cost + output_cost
-
-
-class GeminiInterface(LLMInterface):
-    """Interface for Google Gemini models"""
-
-    def __init__(self, api_key: str, model: str = "gemini-2.5-pro"):
-        genai.configure(api_key=api_key)
-        self.model_name = model
-        self.model = genai.GenerativeModel(model)
-
-    async def generate(self, prompt: str) -> Tuple[str, Dict[str, Any]]:
-        start_time = time.time()
-
-        try:
-            # Configure generation parameters
-            generation_config = genai.types.GenerationConfig(
-                max_output_tokens=2000,
-                temperature=0.7,
-            )
-
-            response = await self.model.generate_content_async(
-                prompt, generation_config=generation_config
-            )
-
-            latency = time.time() - start_time
-
-            # Extract token usage if available
-            input_tokens = getattr(response.usage_metadata, 'prompt_token_count', 0) if hasattr(response, 'usage_metadata') else 0
-            output_tokens = getattr(response.usage_metadata, 'candidates_token_count', 0) if hasattr(response, 'usage_metadata') else 0
-
-            metadata = {
-                "latency": latency,
-                "input_tokens": input_tokens,
-                "output_tokens": output_tokens,
-                "error": None,
-            }
-
-            return response.text, metadata
-
-        except Exception as e:
-            return "", {
-                "latency": time.time() - start_time,
-                "input_tokens": 0,
-                "output_tokens": 0,
-                "error": str(e),
-            }
-
-    def get_model_name(self) -> str:
-        return f"Google-{self.model_name}"
-
-    def estimate_cost(self, input_tokens: int, output_tokens: int) -> float:
-        # Gemini 2.5 Pro pricing (approximate)
-        input_cost = input_tokens * 0.001 / 1000  # $1.00 per 1M tokens
-        output_cost = output_tokens * 0.004 / 1000  # $4.00 per 1M tokens
-        return input_cost + output_cost
 
 
 class QualityEvaluator:
@@ -633,6 +364,7 @@ class APIKeyManager:
             "deepseek": os.getenv("DEEPSEEK_API_KEY") or os.getenv("DEEPSEEK_TOKEN"),
             "xai": os.getenv("XAI_API_KEY") or os.getenv("XAI_TOKEN"),
             "google": os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY"),
+            "moonshot": os.getenv("MOONSHOT_API_KEY") or os.getenv("MOONSHOT_TOKEN"),
         }
 
     @staticmethod
@@ -657,6 +389,8 @@ class APIKeyManager:
                             key_name = "xai"
                         elif "google" in key_name or "gemini" in key_name:
                             key_name = "google"
+                        elif "moonshot" in key_name:
+                            key_name = "moonshot"
 
                         keys[key_name] = value.strip().strip('"').strip("'")
         except FileNotFoundError:
@@ -674,6 +408,7 @@ def setup_environment():
     print("3. DeepSeek: https://platform.deepseek.com/")
     print("4. xAI: https://x.ai/api")
     print("5. Google: https://aistudio.google.com/app/apikey")
+    print("6. Moonshot: https://platform.moonshot.ai/")
 
     print("\n=== Recommended Setup Method ===")
     print("Create a .env file in your project directory:")
@@ -684,6 +419,7 @@ def setup_environment():
     print("DEEPSEEK_API_KEY=sk-...")
     print("XAI_API_KEY=xai-...")
     print("GOOGLE_API_KEY=AIza...")
+    print("MOONSHOT_API_KEY=sk-...")
     print()
     print("Then run: python benchmark.py")
 
