@@ -1,5 +1,9 @@
 ## llm-benchmark
 
+[![Lint](https://github.com/0xnu/llm-benchmark/actions/workflows/lint.yaml/badge.svg)](https://github.com/0xnu/llm-benchmark/actions/workflows/lint.yaml)
+[![Release](https://img.shields.io/github/release/0xnu/llm-benchmark.svg)](https://github.com/0xnu/llm-benchmark/releases/latest)
+[![License](https://img.shields.io/badge/License-Modified_MIT-f5de53?&color=f5de53)](/LICENSE)
+
 Test and compare different large language models on various tasks.
 
 ### Tasks
