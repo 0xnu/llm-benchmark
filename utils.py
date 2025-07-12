@@ -6,6 +6,7 @@
 @author: Finbarrs Oketunji
 @contact: f@finbarrs.eu
 @time: Wednesday July 09 23:05:15 2025
+@updated: Saturday July 12 02:32:25 2025
 @desc: Test and compare different large language models on various tasks.
 """
 
@@ -15,6 +16,7 @@ from dataclasses import dataclass
 from abc import ABC, abstractmethod
 import openai
 import anthropic
+import google.generativeai as genai
 from datetime import datetime
 import os
 
@@ -248,6 +250,61 @@ class XAIInterface(LLMInterface):
         # Grok pricing
         input_cost = input_tokens * 0.005 / 1000  # $5.00 per 1M tokens
         output_cost = output_tokens * 0.015 / 1000  # $15.00 per 1M tokens
+        return input_cost + output_cost
+
+
+class GeminiInterface(LLMInterface):
+    """Interface for Google Gemini models"""
+
+    def __init__(self, api_key: str, model: str = "gemini-2.5-pro"):
+        genai.configure(api_key=api_key)
+        self.model_name = model
+        self.model = genai.GenerativeModel(model)
+
+    async def generate(self, prompt: str) -> Tuple[str, Dict[str, Any]]:
+        start_time = time.time()
+
+        try:
+            # Configure generation parameters
+            generation_config = genai.types.GenerationConfig(
+                max_output_tokens=2000,
+                temperature=0.7,
+            )
+
+            response = await self.model.generate_content_async(
+                prompt, generation_config=generation_config
+            )
+
+            latency = time.time() - start_time
+
+            # Extract token usage if available
+            input_tokens = getattr(response.usage_metadata, 'prompt_token_count', 0) if hasattr(response, 'usage_metadata') else 0
+            output_tokens = getattr(response.usage_metadata, 'candidates_token_count', 0) if hasattr(response, 'usage_metadata') else 0
+
+            metadata = {
+                "latency": latency,
+                "input_tokens": input_tokens,
+                "output_tokens": output_tokens,
+                "error": None,
+            }
+
+            return response.text, metadata
+
+        except Exception as e:
+            return "", {
+                "latency": time.time() - start_time,
+                "input_tokens": 0,
+                "output_tokens": 0,
+                "error": str(e),
+            }
+
+    def get_model_name(self) -> str:
+        return f"Google-{self.model_name}"
+
+    def estimate_cost(self, input_tokens: int, output_tokens: int) -> float:
+        # Gemini 2.5 Pro pricing (approximate)
+        input_cost = input_tokens * 0.001 / 1000  # $1.00 per 1M tokens
+        output_cost = output_tokens * 0.004 / 1000  # $4.00 per 1M tokens
         return input_cost + output_cost
 
 
@@ -575,6 +632,7 @@ class APIKeyManager:
             "anthropic": os.getenv("ANTHROPIC_API_KEY"),
             "deepseek": os.getenv("DEEPSEEK_API_KEY") or os.getenv("DEEPSEEK_TOKEN"),
             "xai": os.getenv("XAI_API_KEY") or os.getenv("XAI_TOKEN"),
+            "google": os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY"),
         }
 
     @staticmethod
@@ -597,6 +655,8 @@ class APIKeyManager:
                             key_name = "deepseek"
                         elif "xai" in key_name:
                             key_name = "xai"
+                        elif "google" in key_name or "gemini" in key_name:
+                            key_name = "google"
 
                         keys[key_name] = value.strip().strip('"').strip("'")
         except FileNotFoundError:
@@ -613,6 +673,7 @@ def setup_environment():
     print("2. Anthropic: https://console.anthropic.com/")
     print("3. DeepSeek: https://platform.deepseek.com/")
     print("4. xAI: https://x.ai/api")
+    print("5. Google: https://aistudio.google.com/app/apikey")
 
     print("\n=== Recommended Setup Method ===")
     print("Create a .env file in your project directory:")
@@ -622,6 +683,7 @@ def setup_environment():
     print("ANTHROPIC_API_KEY=sk-ant-...")
     print("DEEPSEEK_API_KEY=sk-...")
     print("XAI_API_KEY=xai-...")
+    print("GOOGLE_API_KEY=AIza...")
     print()
     print("Then run: python benchmark.py")
 
@@ -631,9 +693,11 @@ def setup_environment():
     print("export ANTHROPIC_API_KEY='sk-ant-...'")
     print("export DEEPSEEK_API_KEY='sk-...'")
     print("export XAI_API_KEY='xai-...'")
+    print("export GOOGLE_API_KEY='AIza...'")
     print()
     print("Windows:")
     print("set OPENAI_API_KEY=sk-proj-...")
     print("set ANTHROPIC_API_KEY=sk-ant-...")
     print("set DEEPSEEK_API_KEY=sk-...")
     print("set XAI_API_KEY=xai-...")
+    print("set GOOGLE_API_KEY=AIza...")

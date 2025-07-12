@@ -6,6 +6,7 @@
 @author: Finbarrs Oketunji
 @contact: f@finbarrs.eu
 @time: Wednesday July 10 05:05:15 2025
+@updated: Saturday July 12 02:32:25 2025
 @desc: Test and compare different large language models on various tasks.
 @run: python3 benchmark.py
 """
@@ -22,7 +23,7 @@ import seaborn as sns
 
 from utils import (
     BenchmarkResult, BenchmarkTask, LLMInterface,
-    OpenAIInterface, AnthropicInterface, DeepSeekInterface, XAIInterface,
+    OpenAIInterface, AnthropicInterface, DeepSeekInterface, XAIInterface, GeminiInterface,
     QualityEvaluator, APIKeyManager, setup_environment
 )
 
@@ -408,7 +409,8 @@ async def main():
     print("\nEnvironment variable check:")
     env_vars_to_check = [
         'DEEPSEEK_API_KEY', 'DEEPSEEK_TOKEN', 'DEEPSEEK_KEY', 'DS_API_KEY',
-        'XAI_API_KEY', 'XAI_TOKEN', 'XAI_KEY', 'GROK_API_KEY'
+        'XAI_API_KEY', 'XAI_TOKEN', 'XAI_KEY', 'GROK_API_KEY',
+        'GOOGLE_API_KEY', 'GEMINI_API_KEY'
     ]
     for var in env_vars_to_check:
         value = os.getenv(var)
@@ -452,6 +454,14 @@ async def main():
         except Exception as e:
             print(f"✗ Failed to add xAI: {e}")
     
+    if api_keys.get('google'):
+        try:
+            benchmark.add_model(GeminiInterface(api_keys['google'], "gemini-2.5-pro"))
+            print("✓ Added Google Gemini 2.5 Pro")
+            models_added += 1
+        except Exception as e:
+            print(f"✗ Failed to add Google Gemini: {e}")
+    
     if models_added == 0:
         print("\n❌ No models were successfully added!")
         print("\nTo fix this, set your API keys using one of these methods:")
@@ -460,11 +470,13 @@ async def main():
         print("   export ANTHROPIC_API_KEY='sk-ant-...'")
         print("   export DEEPSEEK_API_KEY='sk-...'")
         print("   export XAI_API_KEY='xai-...'")
+        print("   export GOOGLE_API_KEY='AIza...'")
         print("\n2. Create a .env file:")
         print("   OPENAI_API_KEY=sk-...")
         print("   ANTHROPIC_API_KEY=sk-ant-...")
         print("   DEEPSEEK_API_KEY=sk-...")
         print("   XAI_API_KEY=xai-...")
+        print("   GOOGLE_API_KEY=AIza...")
         print("\n3. Set them directly in the code (testing only)")
         return
     
