@@ -38,12 +38,13 @@ ANTHROPIC_API_KEY="your_api_key"
 XAI_API_KEY="your_api_key"
 DEEPSEEK_TOKEN="your_api_key"
 GOOGLE_API_KEY="your_api_key"
+MOONSHOT_API_KEY="your_api_key"
 
 ## View Setup Guide
-python3 -m benchmark setup
+python3 -m scripts.benchmark setup
 
 ## Execute The Benchmark
-python3 -m benchmark
+python3 -m scripts.benchmark
 
 ## Deactivate Virtual Environment
 deactivate
@@ -59,23 +60,23 @@ LLM BENCHMARK SUMMARY
 ================================================================================
                                     Avg Quality  Quality Std  Avg Latency  Med Latency  Avg Cost  Total Cost  Error Rate
 model_name                                                                                                              
-Anthropic-claude-sonnet-4-20250514       87.928       14.031       14.919       10.779     0.011       0.178         0.0
-DeepSeek-deepseek-chat                   89.875       10.455       34.939       28.055     0.001       0.014         0.0
-Google-gemini-2.5-pro                    78.654       20.606       22.060       22.571     0.002       0.025         0.0
-OpenAI-gpt-4.1                           89.375       14.818        7.834        7.589     0.005       0.079         0.0
-xAI-grok-4-0709                          92.926       13.368       21.227       20.889     0.013       0.202         0.0
+Anthropic-claude-sonnet-4-20250514       90.125       11.258       14.971       10.418     0.019       0.300        0.00
+DeepSeek-deepseek-chat                   89.460       10.532       43.017       35.208     0.001       0.014        0.00
+Google-gemini-2.5-pro                    74.023       25.900       23.143       22.912     0.001       0.023        6.25
+Moonshot-moonshot-v1-8k                  90.069       14.777        8.926        8.761     0.001       0.014        0.00
+OpenAI-gpt-4.1                           89.375       10.782        8.003        6.904     0.010       0.164        0.00
+xAI-grok-4-0709                          91.003       11.831       21.290       21.010     0.024       0.380        0.00
 ================================================================================
 
 Best Overall Quality: xAI-grok-4-0709
 Fastest Response: OpenAI-gpt-4.1
-Most Cost-Effective: DeepSeek-deepseek-chat
+Most Cost-Effective: Moonshot-moonshot-v1-8k
 
-📊 Results saved to benchmark_report.json
-📈 Visualisations saved to llm_benchmark_results.png and llm_benchmark_detailed.png
+📊 Results saved to results folder
 🏆 Best Overall Model: xAI-grok-4-0709
-📈 Overall Average Quality: 87.8%
-💰 Total Cost: $0.4977
-⚡ Average Latency: 20.20s
+📈 Overall Average Quality: 87.3%
+💰 Total Cost: $0.8949
+⚡ Average Latency: 19.89s
 ```
 
 #### Results Inconsistencies

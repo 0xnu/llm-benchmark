@@ -6,8 +6,8 @@
 @author: Finbarrs Oketunji
 @contact: f@finbarrs.eu
 @time: Wednesday July 10 05:05:15 2025
-@updated: Saturday July 12 02:32:25 2025
-@desc: Test and compare different large language models on various tasks.
+@updated: Saturday July 12 13:02:25 2025
+@desc: Test and compare different large language models on various tasks
 @run: python3 benchmark.py
 """
 
@@ -21,17 +21,24 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from utils import (
-    BenchmarkResult, BenchmarkTask, LLMInterface,
-    OpenAIInterface, AnthropicInterface, DeepSeekInterface, XAIInterface, GeminiInterface,
-    QualityEvaluator, APIKeyManager, setup_environment
+from scripts.utils import (
+    BenchmarkResult, BenchmarkTask, QualityEvaluator, APIKeyManager, setup_environment
+)
+from scripts.models import (
+    LLMInterface, OpenAIInterface, AnthropicInterface, DeepSeekInterface, 
+    XAIInterface, GeminiInterface, MoonshotInterface
 )
 
+
 class LLMBenchmark:
-    def __init__(self):
+    def __init__(self, results_dir: str = "results"):
         self.models: List[LLMInterface] = []
         self.tasks: List[BenchmarkTask] = []
         self.results: List[BenchmarkResult] = []
+        self.results_dir = results_dir
+        
+        # Create results directory if it doesn't exist
+        os.makedirs(self.results_dir, exist_ok=True)
         
     def add_model(self, model: LLMInterface):
         """Add a model to benchmark"""
@@ -200,8 +207,12 @@ class LLMBenchmark:
             }
         }
     
-    def generate_report(self, output_file: str = "benchmark_report.json"):
+    def generate_report(self, output_file: str = None):
         """Generate detailed benchmark report"""
+        if output_file is None:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            output_file = os.path.join(self.results_dir, f"benchmark_report_{timestamp}.json")
+        
         analysis = self.analyse_results()
         
         report = {
@@ -291,13 +302,17 @@ class LLMBenchmark:
         axes[1, 2].grid(True, alpha=0.3)
         
         plt.tight_layout()
-        plt.savefig('llm_benchmark_results.png', dpi=300, bbox_inches='tight')
+        
+        # Save to results directory with timestamp
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        results_chart_path = os.path.join(self.results_dir, f'llm_benchmark_results_{timestamp}.png')
+        plt.savefig(results_chart_path, dpi=300, bbox_inches='tight')
         plt.show()
         
         # Create additional detailed analysis charts
-        self._create_detailed_charts(df)
+        self._create_detailed_charts(df, timestamp)
     
-    def _create_detailed_charts(self, df):
+    def _create_detailed_charts(self, df, timestamp):
         """Create additional detailed analysis charts"""
         fig, axes = plt.subplots(2, 2, figsize=(16, 12))
         
@@ -349,7 +364,10 @@ class LLMBenchmark:
         axes[1, 1].tick_params(axis='x', rotation=45)
         
         plt.tight_layout()
-        plt.savefig('llm_benchmark_detailed.png', dpi=300, bbox_inches='tight')
+        
+        # Save detailed charts to results directory
+        detailed_chart_path = os.path.join(self.results_dir, f'llm_benchmark_detailed_{timestamp}.png')
+        plt.savefig(detailed_chart_path, dpi=300, bbox_inches='tight')
         plt.show()
 
     def print_summary_table(self):
@@ -385,6 +403,21 @@ class LLMBenchmark:
         print(f"Fastest Response: {best_speed}")
         print(f"Most Cost-Effective: {best_cost}")
 
+    def save_raw_data(self, filename: str = None):
+        """Save raw benchmark data to CSV"""
+        if filename is None:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = os.path.join(self.results_dir, f"benchmark_data_{timestamp}.csv")
+        
+        if not self.results:
+            print("No results to save")
+            return
+        
+        df = pd.DataFrame([asdict(r) for r in self.results])
+        df.to_csv(filename, index=False)
+        print(f"Raw data saved to {filename}")
+
+
 async def main():
     """Main function to run the benchmark"""
     print("🚀 LLM Benchmark Suite")
@@ -410,14 +443,15 @@ async def main():
     env_vars_to_check = [
         'DEEPSEEK_API_KEY', 'DEEPSEEK_TOKEN', 'DEEPSEEK_KEY', 'DS_API_KEY',
         'XAI_API_KEY', 'XAI_TOKEN', 'XAI_KEY', 'GROK_API_KEY',
-        'GOOGLE_API_KEY', 'GEMINI_API_KEY'
+        'GOOGLE_API_KEY', 'GEMINI_API_KEY',
+        'MOONSHOT_API_KEY', 'MOONSHOT_TOKEN'
     ]
     for var in env_vars_to_check:
         value = os.getenv(var)
         print(f"  {var}: {'Set' if value else 'Not set'}")
     
-    # Initialise benchmark
-    benchmark = LLMBenchmark()
+    # Initialise benchmark with results directory
+    benchmark = LLMBenchmark(results_dir="results")
     
     # Add models based on available API keys
     models_added = 0
@@ -462,6 +496,14 @@ async def main():
         except Exception as e:
             print(f"✗ Failed to add Google Gemini: {e}")
     
+    if api_keys.get('moonshot'):
+        try:
+            benchmark.add_model(MoonshotInterface(api_keys['moonshot'], "moonshot-v1-8k"))
+            print("✓ Added Moonshot AI")
+            models_added += 1
+        except Exception as e:
+            print(f"✗ Failed to add Moonshot: {e}")
+    
     if models_added == 0:
         print("\n❌ No models were successfully added!")
         print("\nTo fix this, set your API keys using one of these methods:")
@@ -471,12 +513,14 @@ async def main():
         print("   export DEEPSEEK_API_KEY='sk-...'")
         print("   export XAI_API_KEY='xai-...'")
         print("   export GOOGLE_API_KEY='AIza...'")
+        print("   export MOONSHOT_API_KEY='sk-...'")
         print("\n2. Create a .env file:")
         print("   OPENAI_API_KEY=sk-...")
         print("   ANTHROPIC_API_KEY=sk-ant-...")
         print("   DEEPSEEK_API_KEY=sk-...")
         print("   XAI_API_KEY=xai-...")
         print("   GOOGLE_API_KEY=AIza...")
+        print("   MOONSHOT_API_KEY=sk-...")
         print("\n3. Set them directly in the code (testing only)")
         return
     
@@ -501,13 +545,19 @@ async def main():
     # Generate detailed report
     benchmark.generate_report()
     
+    # Save raw data
+    benchmark.save_raw_data()
+    
     # Create visualisations
     print("\nCreating visualisations...")
     benchmark.create_visualisations()
     
     print("\n✅ Benchmark completed successfully!")
-    print("📊 Results saved to benchmark_report.json")
-    print("📈 Visualisations saved to llm_benchmark_results.png and llm_benchmark_detailed.png")
+    print(f"📁 All results saved to '{benchmark.results_dir}' directory")
+    print("📊 Check the directory for:")
+    print("   - JSON report with detailed analysis")
+    print("   - CSV file with raw data")
+    print("   - PNG charts with visualisations")
     
     # Print key insights
     if 'overall_stats' in analysis:
@@ -516,6 +566,7 @@ async def main():
         print(f"📈 Overall Average Quality: {stats['overall_avg_quality_score']:.1f}%")
         print(f"💰 Total Cost: ${stats['total_cost']:.4f}")
         print(f"⚡ Average Latency: {stats['avg_latency']:.2f}s")
+
 
 if __name__ == "__main__":
     import sys
