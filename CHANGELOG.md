@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.0.4 - 2025-07-12 - @0xnu
+* AGI.md added
+
 ## v0.0.3 - 2025-07-12 - @0xnu
 * moonshot-v1-8k added
 * refinements
