@@ -66,9 +66,8 @@ Best Overall Quality: DeepSeek-deepseek-chat
 Fastest Response: OpenAI-gpt-4.1
 Most Cost-Effective: DeepSeek-deepseek-chat
 
-📊 Results saved to [benchmark_report.json](./benchmark_report.json)
-📈 Visualisations saved to [llm_benchmark_results.png](./llm_benchmark_results.png) and [llm_benchmark_detailed.png](./llm_benchmark_detailed.png)
-
+📊 Results saved to benchmark_report.json
+📈 Visualisations saved to llm_benchmark_results.png and llm_benchmark_detailed.png
 🏆 Best Overall Model: DeepSeek-deepseek-chat
 📈 Overall Average Quality: 86.5%
 💰 Total Cost: $0.4894
