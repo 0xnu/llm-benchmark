@@ -59,7 +59,7 @@ Generated results on the 12th July 2025.
 LLM BENCHMARK SUMMARY
 ================================================================================
                                     Avg Quality  Quality Std  Avg Latency  Med Latency  Avg Cost  Total Cost  Error Rate
-model_name                                                                                                              
+model_name
 Anthropic-claude-sonnet-4-20250514       90.125       11.258       14.971       10.418     0.019       0.300        0.00
 DeepSeek-deepseek-chat                   89.460       10.532       43.017       35.208     0.001       0.014        0.00
 Google-gemini-2.5-pro                    74.023       25.900       23.143       22.912     0.001       0.023        6.25
@@ -89,7 +89,21 @@ The variability in model rankings during the benchmark tests for each run can be
 
 ### License
 
-This project is licensed under the [MIT License](./LICENSE).
+This project is licensed under the [Modified MIT License](./LICENSE).
+
+### Citation
+
+```tex
+@misc{llmbenchmark,
+  author       = {Oketunji, A.F.},
+  title        = {LLM Benchmark},
+  year         = 2025,
+  version      = {0.0.4},
+  publisher    = {Zenodo},
+  doi          = {10.5281/zenodo.15872839},
+  url          = {https://doi.org/10.5281/zenodo.15872839}
+}
+```
 
 ### Copyright
 
