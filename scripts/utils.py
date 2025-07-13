@@ -6,7 +6,7 @@
 @author: Finbarrs Oketunji
 @contact: f@finbarrs.eu
 @time: Wednesday July 09 23:05:15 2025
-@updated: Saturday July 12 13:02:25 2025
+@updated: Sunday July 13 15:30:00 2025
 @desc: Utilities for LLM benchmarking including evaluation and API key management
 """
 
@@ -365,6 +365,7 @@ class APIKeyManager:
             "xai": os.getenv("XAI_API_KEY") or os.getenv("XAI_TOKEN"),
             "google": os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY"),
             "moonshot": os.getenv("MOONSHOT_API_KEY") or os.getenv("MOONSHOT_TOKEN"),
+            "openrouter": os.getenv("OPENROUTER_API_KEY") or os.getenv("OPENROUTER_TOKEN"),
         }
 
     @staticmethod
@@ -391,6 +392,8 @@ class APIKeyManager:
                             key_name = "google"
                         elif "moonshot" in key_name:
                             key_name = "moonshot"
+                        elif "openrouter" in key_name:
+                            key_name = "openrouter"
 
                         keys[key_name] = value.strip().strip('"').strip("'")
         except FileNotFoundError:
@@ -409,6 +412,7 @@ def setup_environment():
     print("4. xAI: https://x.ai/api")
     print("5. Google: https://aistudio.google.com/app/apikey")
     print("6. Moonshot: https://platform.moonshot.ai/")
+    print("7. OpenRouter: https://openrouter.ai/keys")
 
     print("\n=== Recommended Setup Method ===")
     print("Create a .env file in your project directory:")
@@ -420,6 +424,7 @@ def setup_environment():
     print("XAI_API_KEY=xai-...")
     print("GOOGLE_API_KEY=AIza...")
     print("MOONSHOT_API_KEY=sk-...")
+    print("OPENROUTER_API_KEY=sk-or-v1-...")
     print()
     print("Then run: python benchmark.py")
 
@@ -430,6 +435,7 @@ def setup_environment():
     print("export DEEPSEEK_API_KEY='sk-...'")
     print("export XAI_API_KEY='xai-...'")
     print("export GOOGLE_API_KEY='AIza...'")
+    print("export OPENROUTER_API_KEY='sk-or-v1-...'")
     print()
     print("Windows:")
     print("set OPENAI_API_KEY=sk-proj-...")
@@ -437,3 +443,4 @@ def setup_environment():
     print("set DEEPSEEK_API_KEY=sk-...")
     print("set XAI_API_KEY=xai-...")
     print("set GOOGLE_API_KEY=AIza...")
+    print("set OPENROUTER_API_KEY=sk-or-v1-...")

@@ -6,6 +6,7 @@
 @author: Finbarrs Oketunji
 @contact: f@finbarrs.eu
 @time: Saturday July 12 13:02:25 2025
+@updated: Sunday July 13 15:30:00 2025
 @desc: LLM model interfaces for benchmarking
 """
 
@@ -331,3 +332,62 @@ class MoonshotInterface(LLMInterface):
         input_cost = input_tokens * 0.001 / 1000  # $1.00 per 1M tokens
         output_cost = output_tokens * 0.002 / 1000  # $2.00 per 1M tokens
         return input_cost + output_cost
+
+
+class QwenInterface(LLMInterface):
+    """Interface for Qwen3 32B via OpenRouter"""
+
+    def __init__(
+        self,
+        api_key: str,
+        model: str = "qwen/qwen3-32b:free",
+        base_url: str = "https://openrouter.ai/api/v1",
+        site_url: str = "https://llmbenchmark.local",
+        site_name: str = "LLM Benchmark Suite",
+    ):
+        self.client = openai.AsyncOpenAI(api_key=api_key, base_url=base_url)
+        self.model = model
+        self.site_url = site_url
+        self.site_name = site_name
+
+    async def generate(self, prompt: str) -> Tuple[str, Dict[str, Any]]:
+        start_time = time.time()
+
+        try:
+            response = await self.client.chat.completions.create(
+                model=self.model,
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=2000,
+                temperature=0.7,
+                extra_headers={
+                    "HTTP-Referer": self.site_url,
+                    "X-Title": self.site_name,
+                },
+                extra_body={},
+            )
+
+            latency = time.time() - start_time
+
+            metadata = {
+                "latency": latency,
+                "input_tokens": response.usage.prompt_tokens if response.usage else 0,
+                "output_tokens": response.usage.completion_tokens if response.usage else 0,
+                "error": None,
+            }
+
+            return response.choices[0].message.content, metadata
+
+        except Exception as e:
+            return "", {
+                "latency": time.time() - start_time,
+                "input_tokens": 0,
+                "output_tokens": 0,
+                "error": str(e),
+            }
+
+    def get_model_name(self) -> str:
+        return f"Qwen-{self.model.replace('qwen/', '').replace(':free', '')}"
+
+    def estimate_cost(self, input_tokens: int, output_tokens: int) -> float:
+        # Qwen3 32B is free via OpenRouter
+        return 0.0

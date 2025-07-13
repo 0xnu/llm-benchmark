@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.0.5 - 2025-07-13 - @0xnu
+* qwen-qwq-32b added
+
 ## v0.0.4 - 2025-07-12 - @0xnu
 * AGI.md added
 
