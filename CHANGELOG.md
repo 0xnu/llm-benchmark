@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.0.6 - 2025-07-15 - @0xnu
+* mistral-medium-2505 added
+
 ## v0.0.5 - 2025-07-13 - @0xnu
 * qwen-qwq-32b added
 

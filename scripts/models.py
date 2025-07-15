@@ -6,7 +6,7 @@
 @author: Finbarrs Oketunji
 @contact: f@finbarrs.eu
 @time: Saturday July 12 13:02:25 2025
-@updated: Sunday July 13 15:30:00 2025
+@updated: Tuesday July 15 18:02:00 2025
 @desc: LLM model interfaces for benchmarking
 """
 
@@ -16,6 +16,8 @@ from abc import ABC, abstractmethod
 import openai
 import anthropic
 import google.generativeai as genai
+from mistralai import Mistral
+from mistralai.models import UserMessage
 
 
 class LLMInterface(ABC):
@@ -391,3 +393,55 @@ class QwenInterface(LLMInterface):
     def estimate_cost(self, input_tokens: int, output_tokens: int) -> float:
         # Qwen3 32B is free via OpenRouter
         return 0.0
+
+
+class MistralInterface(LLMInterface):
+    """Interface for Mistral AI models"""
+
+    def __init__(self, api_key: str, model: str = "mistral-medium-2505"):
+        self.client = Mistral(api_key=api_key)
+        self.model = model
+
+    async def generate(self, prompt: str) -> Tuple[str, Dict[str, Any]]:
+        start_time = time.time()
+
+        try:
+            response = await self.client.chat.complete_async(
+                model=self.model,
+                messages=[UserMessage(content=prompt)],
+                max_tokens=2000,
+                temperature=0.7
+            )
+
+            latency = time.time() - start_time
+
+            # Extract token usage information
+            input_tokens = getattr(response.usage, 'prompt_tokens', 0) if hasattr(response, 'usage') and response.usage else 0
+            output_tokens = getattr(response.usage, 'completion_tokens', 0) if hasattr(response, 'usage') and response.usage else 0
+
+            metadata = {
+                "latency": latency,
+                "input_tokens": input_tokens,
+                "output_tokens": output_tokens,
+                "error": None,
+            }
+
+            return response.choices[0].message.content, metadata
+
+        except Exception as e:
+            return "", {
+                "latency": time.time() - start_time,
+                "input_tokens": 0,
+                "output_tokens": 0,
+                "error": str(e),
+            }
+
+    def get_model_name(self) -> str:
+        return f"Mistral-{self.model}"
+
+    def estimate_cost(self, input_tokens: int, output_tokens: int) -> float:
+        # Mistral pricing varies by model - using approximate rates for mistral-medium-2505
+        # These rates are estimates and should be updated with actual pricing
+        input_cost = input_tokens * 0.002 / 1000  # $2.00 per 1M tokens (estimate)
+        output_cost = output_tokens * 0.006 / 1000  # $6.00 per 1M tokens (estimate)
+        return input_cost + output_cost

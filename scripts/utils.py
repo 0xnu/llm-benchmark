@@ -6,7 +6,7 @@
 @author: Finbarrs Oketunji
 @contact: f@finbarrs.eu
 @time: Wednesday July 09 23:05:15 2025
-@updated: Sunday July 13 15:30:00 2025
+@updated: Tuesday July 15 18:02:00 2025
 @desc: Utilities for LLM benchmarking including evaluation and API key management
 """
 
@@ -366,6 +366,7 @@ class APIKeyManager:
             "google": os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY"),
             "moonshot": os.getenv("MOONSHOT_API_KEY") or os.getenv("MOONSHOT_TOKEN"),
             "openrouter": os.getenv("OPENROUTER_API_KEY") or os.getenv("OPENROUTER_TOKEN"),
+            "mistral": os.getenv("MISTRAL_API_KEY"),
         }
 
     @staticmethod
@@ -394,6 +395,8 @@ class APIKeyManager:
                             key_name = "moonshot"
                         elif "openrouter" in key_name:
                             key_name = "openrouter"
+                        elif "mistral" in key_name:
+                            key_name = "mistral"
 
                         keys[key_name] = value.strip().strip('"').strip("'")
         except FileNotFoundError:
@@ -413,6 +416,7 @@ def setup_environment():
     print("5. Google: https://aistudio.google.com/app/apikey")
     print("6. Moonshot: https://platform.moonshot.ai/")
     print("7. OpenRouter: https://openrouter.ai/keys")
+    print("8. Mistral: https://console.mistral.ai/")
 
     print("\n=== Recommended Setup Method ===")
     print("Create a .env file in your project directory:")
@@ -425,6 +429,7 @@ def setup_environment():
     print("GOOGLE_API_KEY=AIza...")
     print("MOONSHOT_API_KEY=sk-...")
     print("OPENROUTER_API_KEY=sk-or-v1-...")
+    print("MISTRAL_API_KEY=...")
     print()
     print("Then run: python benchmark.py")
 
@@ -436,6 +441,7 @@ def setup_environment():
     print("export XAI_API_KEY='xai-...'")
     print("export GOOGLE_API_KEY='AIza...'")
     print("export OPENROUTER_API_KEY='sk-or-v1-...'")
+    print("export MISTRAL_API_KEY='...'")
     print()
     print("Windows:")
     print("set OPENAI_API_KEY=sk-proj-...")
@@ -444,3 +450,4 @@ def setup_environment():
     print("set XAI_API_KEY=xai-...")
     print("set GOOGLE_API_KEY=AIza...")
     print("set OPENROUTER_API_KEY=sk-or-v1-...")
+    print("set MISTRAL_API_KEY=...")

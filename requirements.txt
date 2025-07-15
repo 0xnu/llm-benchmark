@@ -3,4 +3,5 @@ google-generativeai
 openai
 pandas
 matplotlib
+mistralai
 seaborn
