@@ -5,8 +5,8 @@
 @name: benchmark.py
 @author: Finbarrs Oketunji
 @contact: f@finbarrs.eu
-@time: Wednesday July 10 05:05:15 2025
-@updated: Sunday July 13 15:30:00 2025
+@time: Wednesday July 09 05:05:15 2025
+@updated: Tuesday July 15 18:02:00 2025
 @desc: Test and compare different large language models on various tasks
 @run: python3 benchmark.py
 """
@@ -26,7 +26,7 @@ from scripts.utils import (
 )
 from scripts.models import (
     LLMInterface, OpenAIInterface, AnthropicInterface, DeepSeekInterface,
-    XAIInterface, GeminiInterface, MoonshotInterface, QwenInterface
+    XAIInterface, GeminiInterface, MoonshotInterface, QwenInterface, MistralInterface
 )
 
 
@@ -445,7 +445,8 @@ async def main():
         'XAI_API_KEY', 'XAI_TOKEN', 'XAI_KEY', 'GROK_API_KEY',
         'GOOGLE_API_KEY', 'GEMINI_API_KEY',
         'MOONSHOT_API_KEY', 'MOONSHOT_TOKEN',
-        'OPENROUTER_API_KEY', 'OPENROUTER_TOKEN'
+        'OPENROUTER_API_KEY', 'OPENROUTER_TOKEN',
+        'MISTRAL_API_KEY'
     ]
     for var in env_vars_to_check:
         value = os.getenv(var)
@@ -513,6 +514,14 @@ async def main():
         except Exception as e:
             print(f"✗ Failed to add Qwen3 32B: {e}")
 
+    if api_keys.get('mistral'):
+        try:
+            benchmark.add_model(MistralInterface(api_keys['mistral'], "mistral-medium-2505"))
+            print("✓ Added Mistral Medium 2505")
+            models_added += 1
+        except Exception as e:
+            print(f"✗ Failed to add Mistral: {e}")
+
     if models_added == 0:
         print("\n❌ No models were successfully added!")
         print("\nTo fix this, set your API keys using one of these methods:")
@@ -524,6 +533,7 @@ async def main():
         print("   export GOOGLE_API_KEY='AIza...'")
         print("   export MOONSHOT_API_KEY='sk-...'")
         print("   export OPENROUTER_API_KEY='sk-or-v1-...'")
+        print("   export MISTRAL_API_KEY='...'")
         print("\n2. Create a .env file:")
         print("   OPENAI_API_KEY=sk-...")
         print("   ANTHROPIC_API_KEY=sk-ant-...")
@@ -532,6 +542,7 @@ async def main():
         print("   GOOGLE_API_KEY=AIza...")
         print("   MOONSHOT_API_KEY=sk-...")
         print("   OPENROUTER_API_KEY=sk-or-v1-...")
+        print("   MISTRAL_API_KEY=...")
         print("\n3. Set them directly in the code (testing only)")
         return
 
